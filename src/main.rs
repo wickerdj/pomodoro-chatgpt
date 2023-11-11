@@ -1,6 +1,8 @@
-use std::env;
-use std::io::Write;
-use std::time::{Duration, Instant};
+use clap::{Arg, Command};
+use std::{
+    io::Write,
+    time::{Duration, Instant},
+};
 use tokio::time::sleep;
 
 async fn run_pomodoro_cycle(work_duration: u64, break_duration: u64, cycles: usize) {
@@ -33,11 +35,43 @@ async fn run_timer(duration: u64) {
 
 #[tokio::main]
 async fn main() {
-    let args: Vec<String> = env::args().collect();
+    let matches = Command::new("Pomodoro Timer")
+        .version("1.0")
+        .author("Your Name")
+        .about("Simple Pomodoro Timer implemented in Rust")
+        .arg(
+            Arg::new("work")
+                .short('w')
+                .long("work")
+                .value_name("WORK_DURATION")
+                .help("Sets the duration of the work interval in seconds")
+                .default_value("25"),
+        )
+        .arg(
+            Arg::new("break")
+                .short('b')
+                .long("break")
+                .value_name("BREAK_DURATION")
+                .help("Sets the duration of the break interval in seconds")
+                .default_value("5"),
+        )
+        .arg(
+            Arg::new("cycles")
+                .short('c')
+                .long("cycles")
+                .value_name("CYCLES")
+                .help("Sets the number of Pomodoro cycles")
+                .default_value("4"),
+        )
+        .get_matches();
 
-    let work_duration: u64 = args.get(1).and_then(|arg| arg.parse().ok()).unwrap_or(25);
-    let break_duration: u64 = args.get(2).and_then(|arg| arg.parse().ok()).unwrap_or(5);
-    let cycles: usize = args.get(3).and_then(|arg| arg.parse().ok()).unwrap_or(4);
+    let work_duration: u64 = matches.get_one::<String>("work").unwrap().parse().unwrap();
+    let break_duration: u64 = matches.get_one::<String>("break").unwrap().parse().unwrap();
+    let cycles: usize = matches
+        .get_one::<String>("cycles")
+        .unwrap()
+        .parse()
+        .unwrap();
 
     run_pomodoro_cycle(work_duration, break_duration, cycles).await;
 }
